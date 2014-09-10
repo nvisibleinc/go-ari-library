@@ -12,11 +12,11 @@ type NV_Event struct {
     ARI_Event   string
 }
 
-func Init(in chan string, out chan *NV_Event) {
-  go func(in chan string, out chan *NV_Event) {
+func Init(in chan []byte, out chan *NV_Event) {
+  go func(in chan []byte, out chan *NV_Event) {
     for instring := range in {
       var e *NV_Event
-      json.Unmarshal([]byte(instring), e)
+      json.Unmarshal(instring, e)
       out <- e
     }
   }(in, out)
