@@ -3,6 +3,7 @@ package nv
 
 import (
   "encoding/json"
+  "time"
 )
 
 type NV_Event struct {
