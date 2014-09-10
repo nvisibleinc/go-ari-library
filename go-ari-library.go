@@ -16,9 +16,9 @@ type NV_Event struct {
 func Init(in chan []byte, out chan *NV_Event) {
   go func(in chan []byte, out chan *NV_Event) {
     for instring := range in {
-      var e *NV_Event
-      json.Unmarshal(instring, e)
-      out <- e
+      var e NV_Event
+      json.Unmarshal(instring, &e)
+      out <- &e
     }
   }(in, out)
 }
