@@ -1,4 +1,4 @@
-package main
+package nv
 
 func NewStatusInfo() interface{} {
 	return StatusInfo{}
