@@ -10,8 +10,13 @@ import (
 
 var (
 	inCommand chan *Command
+	inFlightCommands map[string]chan []byte
+	commandChannel chan []byte
 )
 
+func init() {
+	inFlightCommands = make(map[string]chan []byte)
+}
 // Event struct contains the events we pull off the websocket connection.
 type Event struct {
 	ServerID  string    `json:"server_id"`
@@ -80,6 +85,10 @@ func InitConsumer(app string, busType string, config interface{}) chan *Event {
 	return parsedEvents
 }
 
+func InitCommandProducer(busType string, config interface{}, app string) {
+	commandChannel = InitProducer(busType, config, app)
+}
+
 // ProcessEvents pulls messages off the inboundEvents channel.
 // Takes the events which were pulled off the bus, converts them to Event, and
 // places onto the parsedEvents channel.
@@ -94,27 +103,24 @@ func ProcessEvents(inboundEvents chan []byte, parsedEvents chan *Event) {
 }
 
 
-// takes commands off the inCommand channel, convert to json, and place onto the outCommand channel as json
-func ProcessCommands(outCommand chan []byte) {
-	inCommand := make(chan *Command)
-	go func(inCommand chan *Command, outCommand chan []byte) {
-		for command := range inCommand {
-			c, err := json.Marshal(command)
-			if err != nil {
-				fmt.Println(err)
+func ProcessCommand(url string, body string, uniqueId string, method string) []byte {
+	commandResult := make(chan []byte)
+	inFlightCommands[uniqueId] = commandResult
+	jsonMessage, err := json.Marshal(Command{UniqueID: uniqueId, URL: url, Method: method, Body: body})
+	fmt.Println(jsonMessage)
+	if err != nil {
+		return []byte("")
+	}
+
+	commandChannel <- jsonMessage
+	for {
+		select {
+		case r, r_ok := <- commandResult:
+			if r_ok {
+				return r
 			}
-			outCommand <- c
+		case <-time.After(5 * time.Second):
+			return []byte("")
 		}
-	}(inCommand, outCommand)
+	}
 }
-
-
-/*
-func publishCommand(channel string, command *ari.Command, p *nsq.Producer) {
-	busMessage, _ := json.Marshal(command)
-
-	fmt.Printf("[DEBUG] Bus Data for %s:\n%s", channel, busMessage)
-	p.Publish(channel, []byte(busMessage))
-}
-*/
-

@@ -64,4 +64,7 @@ func ChannelPlay (channelID string, mediaURI string, options...string) {
 
 	fmt.Println(url)
 	fmt.Println(body)
+
+	result := ProcessCommand(url, body, "1234", "POST")
+	fmt.Println(string(result))
 }
