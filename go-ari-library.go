@@ -9,13 +9,12 @@ import (
 	"strings"
 )
 
-// Application struct contains the channels necessary
-// for communication to/from the various message bus
-// topics and the event channel
+// AppInstance struct contains the channels necessary for communication to/from
+// the various message bus topics and the event channel.
 type AppInstance struct {
-	inFlightCommands	map[string]chan *CommandResponse
 	commandChannel		chan []byte
-	responseChannel		chan []byte
+	responseChannel		chan *CommandResponse
+	quit				chan int
 	Events				chan *Event
 }
 
@@ -27,6 +26,11 @@ type Event struct {
 	ARI_Body  string    `json:"ari_body"`
 }
 
+type AppStart struct {
+	Application	string	`json:"application"`
+	DialogID	string	`json:"dialog_id"`
+}
+
 // Command struct contains the command we're passing back to ARI.
 type Command struct {
 	UniqueID	string	`json:"unique_id"`
@@ -35,7 +39,7 @@ type Command struct {
 	Body		string	`json:"body"`
 }
 
-// Command Response struct contains the response to a Command
+// CommandResponse struct contains the response to a Command
 type CommandResponse struct {
 	UniqueID		string	`json:"unique_id"`
 	StatusCode		int		`json:"status_code"`
@@ -43,6 +47,7 @@ type CommandResponse struct {
 }
 
 // UUID generates and returns a universally unique identifier.
+// TODO(Brad): Replace this with an imported package.
 func UUID() string {
 	f, _ := os.Open("/dev/urandom")
 	b := make([]byte, 16)
@@ -52,46 +57,47 @@ func UUID() string {
 	return uuid
 }
 
-
+// NewAppInstance function is a constructor to allocate the memory of
+// AppInstance.
 func NewAppInstance() *AppInstance {
 	var a AppInstance
 	return &a
 }
+
 // InitAppInstance initializes the set of resources necessary
 // for a new application
-func (a *AppInstance) InitAppInstance(app string, busType string, config interface{}) {
-	a.inFlightCommands = make(map[string]chan *CommandResponse)
+func (a *AppInstance) InitAppInstance(app string, instanceID string, busType string, config interface{}) {
 	a.Events = make(chan *Event)
-	commandTopic := strings.Join([]string{app, "commands"}, "_")
-	responseTopic := strings.Join([]string{app, "responses"}, "_")
+	a.responseChannel = make(chan *CommandResponse)
+	commandTopic := strings.Join([]string{"commands", instanceID}, "_")
+	responseTopic := strings.Join([]string{"responses", instanceID}, "_")
 	a.commandChannel = InitProducer(commandTopic, busType, config)
-	processEvents(InitConsumer(app, busType, config), a.Events)
-	a.processCommandResponses(InitConsumer(responseTopic, busType, config))
+	processEvents(InitConsumer(strings.Join([]string{"events", instanceID}, "_"), busType, config), a.Events)
+	a.processCommandResponses(InitConsumer(responseTopic, busType, config), a.responseChannel)
 }
 
-func (a *AppInstance) processCommandResponses(inboundResponses chan []byte) {
-		go func(inboundResponses chan []byte) {
-		for response := range inboundResponses {
+// processCommandResponses is a function for parsing the Command-Response.
+// processCommandResponse returns an anonymous go routine which will listen for
+// information on the channel and process them as they arrive.
+func (a *AppInstance) processCommandResponses(fromBus chan []byte, toAppInstance chan *CommandResponse) {
+		go func(fromBus chan []byte, toAppInstance chan *CommandResponse) {
+		for response := range fromBus {
 			var cr CommandResponse
 			json.Unmarshal(response, &cr)
-			returnChan, ok := a.inFlightCommands[cr.UniqueID]
-			if ok {
-				returnChan <- &cr
-			}
-			a.delInFlightCommand(cr.UniqueID)
+			toAppInstance <- &cr
 		}
-	}(inboundResponses)
+	}(fromBus, toAppInstance)
 }
 
 // InitProducer initializes a new message bus producer.
 // The InitProducer uses the configuration to determine which message bus to
 // connect to, and is thus message bus agnostic for the proxy and client.
-func InitProducer(app string, busType string, config interface{}) chan []byte {
+func InitProducer(topic string, busType string, config interface{}) chan []byte {
 	var producer chan []byte
 	switch busType {
 	case "NSQ":
 		// Start an NSQ producer
-		producer = startNSQProducer(config, app)
+		producer = startNSQProducer(config, topic)
 	case "OSLO":
 		// Start an OSLO producer
 		log.Fatal("OSLO message bus producer is not yet implemented.")
@@ -105,12 +111,12 @@ func InitProducer(app string, busType string, config interface{}) chan []byte {
 }
 
 
-func InitConsumer(app string, busType string, config interface{}) chan []byte {
+func InitConsumer(topic string, busType string, config interface{}) chan []byte {
 	var busFeed chan []byte
 	switch busType {
 	case "NSQ":
 		// Star NSQ Consumer
-		busFeed = startNSQConsumer(config, app)
+		busFeed = startNSQConsumer(config, topic)
 	default:
 		log.Fatal("No bus type was specified for the consumer that we recognize")
 	}
@@ -130,22 +136,8 @@ func processEvents(inboundEvents chan []byte, parsedEvents chan *Event) {
 	}(inboundEvents, parsedEvents)
 }
 
-
-func (a *AppInstance) delInFlightCommand(key string) {
-	//TODO Add locking around this
-	delete(a.inFlightCommands, key)
-}
-
-func (a *AppInstance) addInFlightCommand(key string, commandChan chan *CommandResponse) {
-	//TODO Add locking around this
-	a.inFlightCommands[key] = commandChan
-}
-
 func (a *AppInstance) processCommand(url string, body string, method string) *CommandResponse {
-	uniqueID := UUID()
-	commandResponse := make(chan *CommandResponse)
-	a.addInFlightCommand(uniqueId, commandResponse)
-	jsonMessage, err := json.Marshal(Command{UniqueID: uniqueId, URL: url, Method: method, Body: body})
+	jsonMessage, err := json.Marshal(Command{URL: url, Method: method, Body: body})
 	if err != nil {
 		return &CommandResponse{}
 	}
@@ -153,7 +145,7 @@ func (a *AppInstance) processCommand(url string, body string, method string) *Co
 	a.commandChannel <- jsonMessage
 	for {
 		select {
-		case r, r_ok := <- commandResponse:
+		case r, r_ok := <- a.responseChannel:
 			if r_ok {
 				return r
 			}
