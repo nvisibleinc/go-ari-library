@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// global variables
 var bus MessageBus
 
 // MessageBus interface
@@ -19,7 +20,7 @@ type MessageBus interface {
 	TopicExists(topic string) bool
 }
 
-// AppInstanceHandler 
+// AppInstanceHandler
 type AppInstanceHandler func(*AppInstance)
 
 type App struct {
@@ -87,6 +88,7 @@ func TopicExists(topic string) <-chan bool {
 	}(topic, c)
 	return c
 }
+
 func InitBus(busType string, config interface{}) error {
 	switch busType {
 	case "NSQ":
@@ -185,7 +187,6 @@ func InitProducer(topic string) chan []byte {
 	}
 	return producer
 }
-
 
 func InitConsumer(topic string) chan []byte {
 	consumer, err := bus.StartConsumer(topic)

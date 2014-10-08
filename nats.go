@@ -25,7 +25,7 @@ func (n *NATS) InitBus(config interface{}) error {
 			n.config.Queue = value.(string)
 		}
 	}
-			
+
 	n.connection, err = nats.Connect(n.config.URL)
 	if err != nil {
 		return err

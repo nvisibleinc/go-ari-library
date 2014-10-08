@@ -973,9 +973,9 @@ func (a *AppInstance) ChannelsPlay(ChannelID string, Media string, options ...st
 	default:
 		err = nil
 	}
-	var r *Playback
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Playback
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ChannelsPlayWithID(ChannelID string, PlaybackID string, Media string, options ...string) (*Playback, error) {
