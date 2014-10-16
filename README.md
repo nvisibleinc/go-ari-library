@@ -22,8 +22,8 @@ import (
 )
 ```
 
-For a useful example of usage of this library, see the `go-ari-proxy`[`] and
-`ari-voicemail`[2] projects.
+For a useful example of usage of this library, see the [go-ari-proxy][1] and
+[ari-voicemail][2] projects.
 
 Licensing
 ---------
@@ -43,5 +43,5 @@ Licensing
 > along with this program; if not, write to the Free Software
 > Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-[1] https://github.com/nvisibleinc/go-ari-proxy
-[2] https://github.com/nvisibleinc/ari-voicemail
+	[1]: https://github.com/nvisibleinc/go-ari-proxy
+	[2]: https://github.com/nvisibleinc/ari-voicemail
