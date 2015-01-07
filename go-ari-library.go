@@ -104,7 +104,7 @@ func InitBus(busType string, config interface{}) error {
 		log.Fatal("OSLO message bus producer is not yet implemented.")
 	case "RABBITMQ":
 		// Start a RabbitMQ producer
-		log.Fatal("RABBITMQ message bus producer is not yet implemented.")
+		bus = new(RabbitMQ)
 	default:
 		log.Fatal("No bus type was specified for the producer that we recognize.")
 	}

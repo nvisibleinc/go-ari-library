@@ -32,9 +32,9 @@ func (a *AppInstance) ApplicationsList() (*[]Application, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *[]Application
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r []Application
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ApplicationsGet(ApplicationName string) (*Application, error) {
@@ -49,9 +49,9 @@ func (a *AppInstance) ApplicationsGet(ApplicationName string) (*Application, err
 	default:
 		err = nil
 	}
-	var r *Application
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Application
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ApplicationsSubscribe(ApplicationName string, EventSource string) (*Application, error) {
@@ -71,9 +71,9 @@ func (a *AppInstance) ApplicationsSubscribe(ApplicationName string, EventSource 
 	default:
 		err = nil
 	}
-	var r *Application
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Application
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ApplicationsUnsubscribe(ApplicationName string, EventSource string) (*Application, error) {
@@ -95,9 +95,9 @@ func (a *AppInstance) ApplicationsUnsubscribe(ApplicationName string, EventSourc
 	default:
 		err = nil
 	}
-	var r *Application
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Application
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) AsteriskGetInfo(options ...string) (*AsteriskInfo, error) {
@@ -115,9 +115,9 @@ func (a *AppInstance) AsteriskGetInfo(options ...string) (*AsteriskInfo, error) 
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *AsteriskInfo
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r AsteriskInfo
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) AsteriskGetGlobalVar(Var string) (*Variable, error) {
@@ -133,9 +133,9 @@ func (a *AppInstance) AsteriskGetGlobalVar(Var string) (*Variable, error) {
 	default:
 		err = nil
 	}
-	var r *Variable
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Variable
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) AsteriskSetGlobalVar(Var string, options ...string) error {
@@ -169,9 +169,9 @@ func (a *AppInstance) BridgesList() (*[]Bridge, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *[]Bridge
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r []Bridge
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) BridgesCreate(options ...string) (*Bridge, error) {
@@ -197,9 +197,9 @@ func (a *AppInstance) BridgesCreate(options ...string) (*Bridge, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "POST")
 	err = nil
-	var r *Bridge
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Bridge
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) BridgesCreate_Or_Update_With_ID(BridgeID string, options ...string) (*Bridge, error) {
@@ -221,9 +221,9 @@ func (a *AppInstance) BridgesCreate_Or_Update_With_ID(BridgeID string, options .
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "POST")
 	err = nil
-	var r *Bridge
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Bridge
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) BridgesGet(BridgeID string) (*Bridge, error) {
@@ -238,9 +238,9 @@ func (a *AppInstance) BridgesGet(BridgeID string) (*Bridge, error) {
 	default:
 		err = nil
 	}
-	var r *Bridge
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Bridge
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) BridgesDestroy(BridgeID string) error {
@@ -387,9 +387,9 @@ func (a *AppInstance) BridgesPlay(BridgeID string, Media string, options ...stri
 	default:
 		err = nil
 	}
-	var r *Playback
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Playback
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) BridgesPlayWithID(BridgeID string, PlaybackID string, Media string, options ...string) (*Playback, error) {
@@ -423,9 +423,9 @@ func (a *AppInstance) BridgesPlayWithID(BridgeID string, PlaybackID string, Medi
 	default:
 		err = nil
 	}
-	var r *Playback
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Playback
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) BridgesRecord(BridgeID string, Name string, Format string, options ...string) (*LiveRecording, error) {
@@ -472,9 +472,9 @@ func (a *AppInstance) BridgesRecord(BridgeID string, Name string, Format string,
 	default:
 		err = nil
 	}
-	var r *LiveRecording
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r LiveRecording
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ChannelsList() (*[]Channel, error) {
@@ -484,9 +484,9 @@ func (a *AppInstance) ChannelsList() (*[]Channel, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *[]Channel
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r []Channel
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ChannelsOriginate(Endpoint string, options ...string) (*Channel, error) {
@@ -546,9 +546,9 @@ func (a *AppInstance) ChannelsOriginate(Endpoint string, options ...string) (*Ch
 	default:
 		err = nil
 	}
-	var r *Channel
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Channel
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ChannelsGet(ChannelID string) (*Channel, error) {
@@ -563,9 +563,9 @@ func (a *AppInstance) ChannelsGet(ChannelID string) (*Channel, error) {
 	default:
 		err = nil
 	}
-	var r *Channel
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Channel
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ChannelsOriginateWithID(ChannelID string, Endpoint string, options ...string) (*Channel, error) {
@@ -621,9 +621,9 @@ func (a *AppInstance) ChannelsOriginateWithID(ChannelID string, Endpoint string,
 	default:
 		err = nil
 	}
-	var r *Channel
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Channel
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ChannelsHangup(ChannelID string, options ...string) error {
@@ -1009,9 +1009,9 @@ func (a *AppInstance) ChannelsPlayWithID(ChannelID string, PlaybackID string, Me
 	default:
 		err = nil
 	}
-	var r *Playback
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Playback
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ChannelsRecord(ChannelID string, Name string, Format string, options ...string) (*LiveRecording, error) {
@@ -1058,9 +1058,9 @@ func (a *AppInstance) ChannelsRecord(ChannelID string, Name string, Format strin
 	default:
 		err = nil
 	}
-	var r *LiveRecording
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r LiveRecording
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ChannelsGetChannelVar(ChannelID string, Var string) (*Variable, error) {
@@ -1080,9 +1080,9 @@ func (a *AppInstance) ChannelsGetChannelVar(ChannelID string, Var string) (*Vari
 	default:
 		err = nil
 	}
-	var r *Variable
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Variable
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ChannelsSetChannelVar(ChannelID string, Var string, options ...string) error {
@@ -1148,9 +1148,9 @@ func (a *AppInstance) ChannelsSnoopChannel(ChannelID string, App string, options
 	default:
 		err = nil
 	}
-	var r *Channel
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Channel
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) ChannelsSnoopChannelWithID(ChannelID string, SnoopID string, App string, options ...string) (*Channel, error) {
@@ -1184,9 +1184,9 @@ func (a *AppInstance) ChannelsSnoopChannelWithID(ChannelID string, SnoopID strin
 	default:
 		err = nil
 	}
-	var r *Channel
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Channel
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) DeviceStatesList() (*[]DeviceState, error) {
@@ -1196,9 +1196,9 @@ func (a *AppInstance) DeviceStatesList() (*[]DeviceState, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *[]DeviceState
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r []DeviceState
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) DeviceStatesGet(DeviceName string) (*DeviceState, error) {
@@ -1208,9 +1208,9 @@ func (a *AppInstance) DeviceStatesGet(DeviceName string) (*DeviceState, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *DeviceState
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r DeviceState
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) DeviceStatesUpdate(DeviceName string, DeviceState string) error {
@@ -1255,9 +1255,9 @@ func (a *AppInstance) EndpointsList() (*[]Endpoint, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *[]Endpoint
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r []Endpoint
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) EndpointsSendMessage(To string, From string, options ...string) error {
@@ -1301,9 +1301,9 @@ func (a *AppInstance) EndpointsListByTech(Tech string) (*[]Endpoint, error) {
 	default:
 		err = nil
 	}
-	var r *[]Endpoint
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r []Endpoint
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) EndpointsGet(Tech string, Resource string) (*Endpoint, error) {
@@ -1320,9 +1320,9 @@ func (a *AppInstance) EndpointsGet(Tech string, Resource string) (*Endpoint, err
 	default:
 		err = nil
 	}
-	var r *Endpoint
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Endpoint
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) EndpointsSendMessageToEndpoint(Tech string, Resource string, From string, options ...string) error {
@@ -1363,9 +1363,9 @@ func (a *AppInstance) EventsEventWebsocket(App string) (*Message, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *Message
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Message
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) EventsUserEvent(EventName string, Application string, options ...string) error {
@@ -1407,9 +1407,9 @@ func (a *AppInstance) MailboxesList() (*[]Mailbox, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *[]Mailbox
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r []Mailbox
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) MailboxesGet(MailboxName string) (*Mailbox, error) {
@@ -1425,21 +1425,13 @@ func (a *AppInstance) MailboxesGet(MailboxName string) (*Mailbox, error) {
 		err = nil
 	}
 	var r Mailbox
-	fmt.Println(result.ResponseBody)
 	json.Unmarshal([]byte(result.ResponseBody), &r)
 	return &r, err
 }
 
 func (a *AppInstance) MailboxesUpdate(MailboxName string, OldMessages int, NewMessages int) error {
 	var err error
-/*
-	paramMap := make(map[string]string)
-	paramMap["oldMessages"] = strconv.Itoa(OldMessages)
-	paramMap["newMessages"] = strconv.Itoa(NewMessages)
-*/
-	
 	url := fmt.Sprintf("/mailboxes/%s", MailboxName)
-//	body := buildJSON(paramMap)
 	body := fmt.Sprintf("{\"oldMessages\": %d, \"newMessages\": %d }", OldMessages, NewMessages)
 	result := a.processCommand(url, body, "PUT")
 	switch result.StatusCode {
@@ -1478,9 +1470,9 @@ func (a *AppInstance) PlaybacksGet(PlaybackID string) (*Playback, error) {
 	default:
 		err = nil
 	}
-	var r *Playback
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Playback
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) PlaybacksStop(PlaybackID string) error {
@@ -1525,9 +1517,9 @@ func (a *AppInstance) RecordingsListStored() (*[]StoredRecording, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *[]StoredRecording
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r []StoredRecording
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) RecordingsGetStored(RecordingName string) (*StoredRecording, error) {
@@ -1542,9 +1534,9 @@ func (a *AppInstance) RecordingsGetStored(RecordingName string) (*StoredRecordin
 	default:
 		err = nil
 	}
-	var r *StoredRecording
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r StoredRecording
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) RecordingsDeleteStored(RecordingName string) error {
@@ -1577,9 +1569,9 @@ func (a *AppInstance) RecordingsCopyStored(RecordingName string, DestinationReco
 	default:
 		err = nil
 	}
-	var r *StoredRecording
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r StoredRecording
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) RecordingsGetLive(RecordingName string) (*LiveRecording, error) {
@@ -1594,9 +1586,9 @@ func (a *AppInstance) RecordingsGetLive(RecordingName string) (*LiveRecording, e
 	default:
 		err = nil
 	}
-	var r *LiveRecording
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r LiveRecording
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) RecordingsCancel(RecordingName string) error {
@@ -1716,9 +1708,9 @@ func (a *AppInstance) SoundsList(options ...string) (*[]Sound, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *[]Sound
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r []Sound
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
 
 func (a *AppInstance) SoundsGet(SoundID string) (*Sound, error) {
@@ -1728,7 +1720,7 @@ func (a *AppInstance) SoundsGet(SoundID string) (*Sound, error) {
 	body := buildJSON(paramMap)
 	result := a.processCommand(url, body, "GET")
 	err = nil
-	var r *Sound
-	json.Unmarshal([]byte(result.ResponseBody), r)
-	return r, err
+	var r Sound
+	json.Unmarshal([]byte(result.ResponseBody), &r)
+	return &r, err
 }
