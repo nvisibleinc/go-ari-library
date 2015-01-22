@@ -5,13 +5,13 @@ import (
 )
 
 type natsConfig struct {
-	URL		string	`json:"url"`
-	Queue	string	`json:"queue"`
+	URL   string `json:"url"`
+	Queue string `json:"queue"`
 }
 type NATS struct {
-	config		natsConfig
-	connection	*nats.Conn
-	encoder		*nats.EncodedConn
+	config     natsConfig
+	connection *nats.Conn
+	encoder    *nats.EncodedConn
 }
 
 func (n *NATS) InitBus(config interface{}) error {

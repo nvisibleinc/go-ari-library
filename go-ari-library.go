@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
-	"time"
 	"log"
+	"os"
 	"strings"
+	"time"
 )
 
 // global variables
-var bus MessageBus	// global var that holds the current MessageBus interface.
+var bus MessageBus // global var that holds the current MessageBus interface.
 
 // MessageBus interface contains methods for interacting with the abstracted message bus.
 type MessageBus interface {
@@ -28,18 +28,18 @@ type AppInstanceHandler func(*AppInstance)
 // App struct contains information about an ARI application.
 // The top level that signals the application instance creation.
 type App struct {
-	name	string
-	Events	chan []byte
-	Stop	chan bool
+	name   string
+	Events chan []byte
+	Stop   chan bool
 }
 
 // AppInstance struct contains the channels necessary for communication to/from
 // the various message bus topics and the event channel.
 type AppInstance struct {
-	commandChannel		chan []byte
-	responseChannel		chan *CommandResponse
-	quit				chan int
-	Events				chan *Event
+	commandChannel  chan []byte
+	responseChannel chan *CommandResponse
+	quit            chan int
+	Events          chan *Event
 }
 
 // Event struct contains the events we pull off the websocket connection.
@@ -52,23 +52,23 @@ type Event struct {
 
 // AppStart struct contains the initial information for the start of a new application instance.
 type AppStart struct {
-	Application	string	`json:"application"`
-	DialogID	string	`json:"dialog_id"`
+	Application string `json:"application"`
+	DialogID    string `json:"dialog_id"`
 }
 
 // Command struct contains the command we're passing back to ARI.
 type Command struct {
-	UniqueID	string	`json:"unique_id"`
-	URL			string	`json:"url"`
-	Method		string 	`json:"method"`
-	Body		string	`json:"body"`
+	UniqueID string `json:"unique_id"`
+	URL      string `json:"url"`
+	Method   string `json:"method"`
+	Body     string `json:"body"`
 }
 
 // CommandResponse struct contains the response to a Command
 type CommandResponse struct {
-	UniqueID		string	`json:"unique_id"`
-	StatusCode		int		`json:"status_code"`
-	ResponseBody	string	`json:"response_body"`
+	UniqueID     string `json:"unique_id"`
+	StatusCode   int    `json:"status_code"`
+	ResponseBody string `json:"response_body"`
 }
 
 // InitLogger is a wrapper function to provide a sane interface to logging messages.
@@ -120,9 +120,9 @@ func InitBus(busType string, config interface{}) error {
 func TopicExists(topic string) <-chan bool {
 	c := make(chan bool)
 	go func(topic string, c chan bool) {
-		for i:= 0; i < 20; i++ {
+		for i := 0; i < 20; i++ {
 			if bus.TopicExists(topic) {
-			c <- true
+				c <- true
 			}
 			time.Sleep(100 * time.Millisecond)
 		}
@@ -174,7 +174,7 @@ func (a *AppInstance) InitAppInstance(instanceID string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	eventBus, err :=  bus.StartConsumer(strings.Join([]string{"events", instanceID}, "_"))
+	eventBus, err := bus.StartConsumer(strings.Join([]string{"events", instanceID}, "_"))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -185,7 +185,6 @@ func (a *AppInstance) InitAppInstance(instanceID string) {
 	}
 	a.processCommandResponses(responseBus, a.responseChannel)
 }
-
 
 // InitProducer initializes a new message bus producer.
 func InitProducer(topic string) chan []byte {
@@ -199,7 +198,7 @@ func InitProducer(topic string) chan []byte {
 // InitConsumer initializes a new message bus consumer.
 func InitConsumer(topic string) chan []byte {
 	consumer, err := bus.StartConsumer(topic)
-	if err !=nil {
+	if err != nil {
 		fmt.Println(err)
 	}
 	return consumer
@@ -230,7 +229,7 @@ func (a *AppInstance) processCommand(url string, body string, method string) *Co
 	a.commandChannel <- jsonMessage
 	for {
 		select {
-		case r, r_ok := <- a.responseChannel:
+		case r, r_ok := <-a.responseChannel:
 			if r_ok {
 				return r
 			}
@@ -244,7 +243,7 @@ func (a *AppInstance) processCommand(url string, body string, method string) *Co
 // processCommandResponses spawns an anonymous go routine which will listen for
 // information on the channel and process them as they arrive.
 func (a *AppInstance) processCommandResponses(fromBus chan []byte, toAppInstance chan *CommandResponse) {
-		go func(fromBus chan []byte, toAppInstance chan *CommandResponse) {
+	go func(fromBus chan []byte, toAppInstance chan *CommandResponse) {
 		for response := range fromBus {
 			var cr CommandResponse
 			json.Unmarshal(response, &cr)
