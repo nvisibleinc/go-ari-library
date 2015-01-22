@@ -54,6 +54,7 @@ type Event struct {
 type AppStart struct {
 	Application string `json:"application"`
 	DialogID    string `json:"dialog_id"`
+	ServerID    string `json:"server_id"`
 }
 
 // Command struct contains the command we're passing back to ARI.
