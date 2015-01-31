@@ -3,6 +3,7 @@ package ari
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"time"
 	"log"
@@ -63,6 +64,10 @@ type CommandResponse struct {
 	UniqueID		string	`json:"unique_id"`
 	StatusCode		int		`json:"status_code"`
 	ResponseBody	string	`json:"response_body"`
+}
+
+func InitLogger(handle io.Writer, prefix string) *log.Logger {
+	return log.New(handle, strings.Join([]string{prefix, ": "}, ""), log.Ldate|log.Ltime|log.Lshortfile)
 }
 
 // UUID generates and returns a universally unique identifier.
