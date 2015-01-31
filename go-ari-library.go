@@ -11,9 +11,9 @@ import (
 )
 
 // global variables
-var bus MessageBus
+var bus MessageBus	// global var that holds the current MessageBus interface.
 
-// MessageBus interface
+// MessageBus interface contains methods for interacting with the abstracted message bus.
 type MessageBus interface {
 	InitBus(config interface{}) error
 	StartProducer(topic string) (chan []byte, error)
@@ -21,14 +21,18 @@ type MessageBus interface {
 	TopicExists(topic string) bool
 }
 
-// AppInstanceHandler
+// AppInstanceHandler when you start a new App, you pass in a function of type AppInstanceHandler.
+// The entry point of the execution of an application instance.
 type AppInstanceHandler func(*AppInstance)
 
+// App struct contains information about an ARI application.
+// The top level that signals the application instance creation.
 type App struct {
 	name	string
 	Events	chan []byte
 	Stop	chan bool
 }
+
 // AppInstance struct contains the channels necessary for communication to/from
 // the various message bus topics and the event channel.
 type AppInstance struct {
@@ -46,6 +50,7 @@ type Event struct {
 	ARI_Body  string    `json:"ari_body"`
 }
 
+// AppStart struct contains the initial information for the start of a new application instance.
 type AppStart struct {
 	Application	string	`json:"application"`
 	DialogID	string	`json:"dialog_id"`
@@ -66,6 +71,7 @@ type CommandResponse struct {
 	ResponseBody	string	`json:"response_body"`
 }
 
+// InitLogger is a wrapper function to provide a sane interface to logging messages.
 func InitLogger(handle io.Writer, prefix string) *log.Logger {
 	return log.New(handle, strings.Join([]string{prefix, ": "}, ""), log.Ldate|log.Ltime|log.Lshortfile)
 }
@@ -81,19 +87,10 @@ func UUID() string {
 	return uuid
 }
 
-func TopicExists(topic string) <-chan bool {
-	c := make(chan bool)
-	go func(topic string, c chan bool) {
-		for i:= 0; i < 20; i++ {
-			if bus.TopicExists(topic) {
-			c <- true
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-	}(topic, c)
-	return c
-}
-
+// InitBus will initialize a new message bus.
+// Abstracts the message bus initialization based on the configuration in order
+// to allow the creation of a proxy or client using message bus agnostic
+// methods.
 func InitBus(busType string, config interface{}) error {
 	switch busType {
 	case "NSQ":
@@ -115,12 +112,34 @@ func InitBus(busType string, config interface{}) error {
 	return nil
 }
 
+// TopicExists abstracts the basic function provided by the MessageBus interface.
+// Spawns a goroutine which loops through and waits for a topic to actually exist.
+// Returns a channel immediately which is read by the user of this function to
+// determine topic existence or timeout by way of the normal time.After pattern
+// in a select{}.
+func TopicExists(topic string) <-chan bool {
+	c := make(chan bool)
+	go func(topic string, c chan bool) {
+		for i:= 0; i < 20; i++ {
+			if bus.TopicExists(topic) {
+			c <- true
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	}(topic, c)
+	return c
+}
+
+// NewApp creates a new signalling channel for use by an application.
 func NewApp() *App {
 	var a App
 	a.Stop = make(chan bool)
 	return &a
 }
 
+// Init spawns the goroutine that listens for messages on the signalling channel.
+// Creates a new application instance for the client to utilize.
+// Passes the AppInstance to the AppInstanceHandler function.
 func (a *App) Init(app string, handler AppInstanceHandler) {
 	a.Events = InitConsumer(app)
 	go func(app string, a *App) {
@@ -136,15 +155,13 @@ func (a *App) Init(app string, handler AppInstanceHandler) {
 	}(app, a)
 }
 
-// NewAppInstance function is a constructor to allocate the memory of
-// AppInstance.
+// NewAppInstance function is a constructor to allocate the memory of AppInstance.
 func NewAppInstance() *AppInstance {
 	var a AppInstance
 	return &a
 }
 
-// InitAppInstance initializes the set of resources necessary
-// for a new application
+// InitAppInstance initializes the set of resources necessary for a new application instance.
 func (a *AppInstance) InitAppInstance(instanceID string) {
 	var err error
 	a.Events = make(chan *Event)
@@ -169,22 +186,8 @@ func (a *AppInstance) InitAppInstance(instanceID string) {
 	a.processCommandResponses(responseBus, a.responseChannel)
 }
 
-// processCommandResponses is a function for parsing the Command-Response.
-// processCommandResponse returns an anonymous go routine which will listen for
-// information on the channel and process them as they arrive.
-func (a *AppInstance) processCommandResponses(fromBus chan []byte, toAppInstance chan *CommandResponse) {
-		go func(fromBus chan []byte, toAppInstance chan *CommandResponse) {
-		for response := range fromBus {
-			var cr CommandResponse
-			json.Unmarshal(response, &cr)
-			toAppInstance <- &cr
-		}
-	}(fromBus, toAppInstance)
-}
 
 // InitProducer initializes a new message bus producer.
-// The InitProducer uses the configuration to determine which message bus to
-// connect to, and is thus message bus agnostic for the proxy and client.
 func InitProducer(topic string) chan []byte {
 	producer, err := bus.StartProducer(topic)
 	if err != nil {
@@ -193,6 +196,7 @@ func InitProducer(topic string) chan []byte {
 	return producer
 }
 
+// InitConsumer initializes a new message bus consumer.
 func InitConsumer(topic string) chan []byte {
 	consumer, err := bus.StartConsumer(topic)
 	if err !=nil {
@@ -201,7 +205,7 @@ func InitConsumer(topic string) chan []byte {
 	return consumer
 }
 
-// ProcessEvents pulls messages off the inboundEvents channel.
+// processEvents pulls messages off the inboundEvents channel.
 // Takes the events which were pulled off the bus, converts them to Event, and
 // places onto the parsedEvents channel.
 func processEvents(inboundEvents chan []byte, parsedEvents chan *Event) {
@@ -214,6 +218,9 @@ func processEvents(inboundEvents chan []byte, parsedEvents chan *Event) {
 	}(inboundEvents, parsedEvents)
 }
 
+// processCommand is executing the remote command.
+// Performs the work of marshaling the command, sending it across the bus, and
+// then unmarshaling the data in order to return a command response.
 func (a *AppInstance) processCommand(url string, body string, method string) *CommandResponse {
 	jsonMessage, err := json.Marshal(Command{URL: url, Method: method, Body: body})
 	if err != nil {
@@ -231,4 +238,17 @@ func (a *AppInstance) processCommand(url string, body string, method string) *Co
 			return &CommandResponse{}
 		}
 	}
+}
+
+// processCommandResponses is a function for parsing the Command-Response.
+// processCommandResponses spawns an anonymous go routine which will listen for
+// information on the channel and process them as they arrive.
+func (a *AppInstance) processCommandResponses(fromBus chan []byte, toAppInstance chan *CommandResponse) {
+		go func(fromBus chan []byte, toAppInstance chan *CommandResponse) {
+		for response := range fromBus {
+			var cr CommandResponse
+			json.Unmarshal(response, &cr)
+			toAppInstance <- &cr
+		}
+	}(fromBus, toAppInstance)
 }
