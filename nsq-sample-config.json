@@ -1,0 +1,15 @@
+{
+	"origin": "http://104.131.33.98/ari/events",
+	"server_id": "do-z1-ast1",
+	"applications": ["nvisible_control"],
+	"websocket_url": "ws://104.131.33.98:8088/ari/events",
+	"stasis_url": "http://104.131.33.98:8088/ari",
+	"ws_user": "nvisible",
+	"ws_password": "well_hello_there",
+	"message_bus": "NSQ",
+	"bus_config" : {
+		"channel": "nvisible_control",
+  		"lookupd_http_address": ["104.131.33.98:4161"],
+		"nsq_address": "104.131.33.98:4150"
+    }
+}

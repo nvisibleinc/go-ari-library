@@ -9,6 +9,24 @@ import (
 	"strings"
 )
 
+var bus MessageBus
+
+// MessageBus interface
+type MessageBus interface {
+	InitBus(config interface{}) error
+	StartProducer(topic string) (chan []byte, error)
+	StartConsumer(topic string) (chan []byte, error)
+	TopicExists(topic string) bool
+}
+
+// AppInstanceHandler 
+type AppInstanceHandler func(*AppInstance)
+
+type App struct {
+	name	string
+	Events	chan []byte
+	Stop	chan bool
+}
 // AppInstance struct contains the channels necessary for communication to/from
 // the various message bus topics and the event channel.
 type AppInstance struct {
@@ -57,6 +75,60 @@ func UUID() string {
 	return uuid
 }
 
+func TopicExists(topic string) <-chan bool {
+	c := make(chan bool)
+	go func(topic string, c chan bool) {
+		for i:= 0; i < 20; i++ {
+			if bus.TopicExists(topic) {
+			c <- true
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	}(topic, c)
+	return c
+}
+func InitBus(busType string, config interface{}) error {
+	switch busType {
+	case "NSQ":
+		// Start NSQ
+		bus = new(NSQ)
+	case "NATS":
+		// Start NATS
+		bus = new(NATS)
+	case "OSLO":
+		// Start an OSLO producer
+		log.Fatal("OSLO message bus producer is not yet implemented.")
+	case "RABBITMQ":
+		// Start a RabbitMQ producer
+		log.Fatal("RABBITMQ message bus producer is not yet implemented.")
+	default:
+		log.Fatal("No bus type was specified for the producer that we recognize.")
+	}
+	bus.InitBus(config)
+	return nil
+}
+
+func NewApp() *App {
+	var a App
+	a.Stop = make(chan bool)
+	return &a
+}
+
+func (a *App) Init(app string, handler AppInstanceHandler) {
+	a.Events = InitConsumer(app)
+	go func(app string, a *App) {
+		for event := range a.Events {
+			var as AppStart
+			json.Unmarshal(event, &as)
+			if as.Application == app {
+				ai := new(AppInstance)
+				ai.InitAppInstance(as.DialogID)
+				go handler(ai)
+			}
+		}
+	}(app, a)
+}
+
 // NewAppInstance function is a constructor to allocate the memory of
 // AppInstance.
 func NewAppInstance() *AppInstance {
@@ -66,14 +138,28 @@ func NewAppInstance() *AppInstance {
 
 // InitAppInstance initializes the set of resources necessary
 // for a new application
-func (a *AppInstance) InitAppInstance(app string, instanceID string, busType string, config interface{}) {
+func (a *AppInstance) InitAppInstance(instanceID string) {
+	var err error
 	a.Events = make(chan *Event)
 	a.responseChannel = make(chan *CommandResponse)
 	commandTopic := strings.Join([]string{"commands", instanceID}, "_")
+	fmt.Println("Command topic is: ", commandTopic)
 	responseTopic := strings.Join([]string{"responses", instanceID}, "_")
-	a.commandChannel = InitProducer(commandTopic, busType, config)
-	processEvents(InitConsumer(strings.Join([]string{"events", instanceID}, "_"), busType, config), a.Events)
-	a.processCommandResponses(InitConsumer(responseTopic, busType, config), a.responseChannel)
+	a.commandChannel, err = bus.StartProducer(commandTopic)
+	a.commandChannel <- []byte("DUMMY")
+	if err != nil {
+		fmt.Println(err)
+	}
+	eventBus, err :=  bus.StartConsumer(strings.Join([]string{"events", instanceID}, "_"))
+	if err != nil {
+		fmt.Println(err)
+	}
+	processEvents(eventBus, a.Events)
+	responseBus, err := bus.StartConsumer(responseTopic)
+	if err != nil {
+		fmt.Println(err)
+	}
+	a.processCommandResponses(responseBus, a.responseChannel)
 }
 
 // processCommandResponses is a function for parsing the Command-Response.
@@ -92,35 +178,21 @@ func (a *AppInstance) processCommandResponses(fromBus chan []byte, toAppInstance
 // InitProducer initializes a new message bus producer.
 // The InitProducer uses the configuration to determine which message bus to
 // connect to, and is thus message bus agnostic for the proxy and client.
-func InitProducer(topic string, busType string, config interface{}) chan []byte {
-	var producer chan []byte
-	switch busType {
-	case "NSQ":
-		// Start an NSQ producer
-		producer = startNSQProducer(config, topic)
-	case "OSLO":
-		// Start an OSLO producer
-		log.Fatal("OSLO message bus producer is not yet implemented.")
-	case "RABBITMQ":
-		// Start a RabbitMQ producer
-		log.Fatal("RABBITMQ message bus producer is not yet implemented.")
-	default:
-		log.Fatal("No bus type was specified for the producer that we recognize.")
+func InitProducer(topic string) chan []byte {
+	producer, err := bus.StartProducer(topic)
+	if err != nil {
+		fmt.Println(err)
 	}
 	return producer
 }
 
 
-func InitConsumer(topic string, busType string, config interface{}) chan []byte {
-	var busFeed chan []byte
-	switch busType {
-	case "NSQ":
-		// Star NSQ Consumer
-		busFeed = startNSQConsumer(config, topic)
-	default:
-		log.Fatal("No bus type was specified for the consumer that we recognize")
+func InitConsumer(topic string) chan []byte {
+	consumer, err := bus.StartConsumer(topic)
+	if err !=nil {
+		fmt.Println(err)
 	}
-	return busFeed
+	return consumer
 }
 
 // ProcessEvents pulls messages off the inboundEvents channel.
