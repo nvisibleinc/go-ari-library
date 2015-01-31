@@ -7,9 +7,10 @@ import (
 )
 
 type NV_Event struct {
-    ServerID    string
-    Timestamp   time.Time
-    ARI_Event   string
+  ServerID    string    `json:"server_id"`
+  Timestamp   time.Time `json:"timestamp"`
+  Type        string    `json:"type"`
+  ARI_Event   string    `json:"ari_event"`
 }
 
 func Init(in chan []byte, out chan *NV_Event) {
