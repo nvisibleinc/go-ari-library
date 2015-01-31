@@ -62,6 +62,6 @@ func (a *AppInstance) ChannelPlay (channelID string, mediaURI string, options...
 
 	body := buildJSON(paramMap)
 
-	result := a.processCommand(url, body, "1234", "POST")
+	result := a.processCommand(url, body, "POST")
 	fmt.Printf("ChannelPlay result code: %v\n", result)
 }
