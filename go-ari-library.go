@@ -8,15 +8,15 @@ import (
 	"log"
 )
 
-var (
-	inCommand chan *Command
-	inFlightCommands map[string]chan []byte
-	commandChannel chan []byte
-)
-
-func init() {
-	inFlightCommands = make(map[string]chan []byte)
+// Application struct contains the channels necessary
+// for communication to/from the various message bus
+// topics and the event channel
+type AppInstance struct {
+	inFlightCommands	map[string]chan []byte
+	commandChannel		chan []byte
+	Events				chan *Event
 }
+
 // Event struct contains the events we pull off the websocket connection.
 type Event struct {
 	ServerID  string    `json:"server_id"`
@@ -43,10 +43,27 @@ func UUID() string {
 	return uuid
 }
 
+
+func NewAppInstance() *AppInstance {
+	var a AppInstance
+	return &a
+}
+// InitAppInstance initializes the set of resources necessary
+// for a new application
+func (a *AppInstance) InitAppInstance(app string, busType string, config interface{}) {
+	
+	a.inFlightCommands = make(map[string]chan []byte)
+	a.Events = make(chan *Event)
+	a.commandChannel = InitProducer(app, busType, config)
+	processEvents(InitConsumer(app, busType, config), a.Events)
+	
+}
+
+
 // InitProducer initializes a new message bus producer.
 // The InitProducer uses the configuration to determine which message bus to
 // connect to, and is thus message bus agnostic for the proxy and client.
-func InitProducer(busType string, config interface{}, app string) chan []byte {
+func InitProducer(app string, busType string, config interface{}) chan []byte {
 	var producer chan []byte
 	switch busType {
 	case "NSQ":
@@ -65,8 +82,9 @@ func InitProducer(busType string, config interface{}, app string) chan []byte {
 }
 
 
-func initMessageBus(app string, busType string, config interface{}) chan []byte {
+func InitConsumer(app string, busType string, config interface{}) chan []byte {
 	var busFeed chan []byte
+	fmt.Println("calling consumer setup")
 	switch busType {
 	case "NSQ":
 		// Star NSQ Consumer
@@ -77,24 +95,14 @@ func initMessageBus(app string, busType string, config interface{}) chan []byte 
 	return busFeed
 }
 
-// InitConsumer initializes a new message bus consumer
-func InitConsumer(app string, busType string, config interface{}) chan *Event {
-	// create channel to place parsed events onto
-	parsedEvents := make(chan *Event)
-	ProcessEvents(initMessageBus(app, busType, config), parsedEvents)
-	return parsedEvents
-}
-
-func InitCommandProducer(busType string, config interface{}, app string) {
-	commandChannel = InitProducer(busType, config, app)
-}
-
 // ProcessEvents pulls messages off the inboundEvents channel.
 // Takes the events which were pulled off the bus, converts them to Event, and
 // places onto the parsedEvents channel.
-func ProcessEvents(inboundEvents chan []byte, parsedEvents chan *Event) {
+func processEvents(inboundEvents chan []byte, parsedEvents chan *Event) {
 	go func(inboundEvents chan []byte, parsedEvents chan *Event) {
 		for event := range inboundEvents {
+			fmt.Println(event)
+			fmt.Println("Received message from bus")
 			var e Event
 			json.Unmarshal(event, &e)
 			parsedEvents <- &e
@@ -103,16 +111,26 @@ func ProcessEvents(inboundEvents chan []byte, parsedEvents chan *Event) {
 }
 
 
-func ProcessCommand(url string, body string, uniqueId string, method string) []byte {
+func (a *AppInstance) delInFlightCommand(key string) {
+	//TODO Add locking around this
+	delete(a.inFlightCommands, key)
+}
+
+func (a *AppInstance) addInFlightCommand(key string, commandChan chan []byte) {
+	//TODO Add locking around this
+	a.inFlightCommands[key] = commandChan
+}
+
+func (a *AppInstance) processCommand(url string, body string, uniqueId string, method string) []byte {
 	commandResult := make(chan []byte)
-	inFlightCommands[uniqueId] = commandResult
+	a.addInFlightCommand(uniqueId, commandResult)
 	jsonMessage, err := json.Marshal(Command{UniqueID: uniqueId, URL: url, Method: method, Body: body})
 	fmt.Println(jsonMessage)
 	if err != nil {
 		return []byte("")
 	}
 
-	commandChannel <- jsonMessage
+	a.commandChannel <- jsonMessage
 	for {
 		select {
 		case r, r_ok := <- commandResult:

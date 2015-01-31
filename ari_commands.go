@@ -34,7 +34,7 @@ func buildJSON(params map[string]string) string {
 	return body.String()
 }
 
-func ChannelPlay (channelID string, mediaURI string, options...string) {
+func (a *AppInstance) ChannelPlay (channelID string, mediaURI string, options...string) {
 	paramMap := make(map[string]string)
 	paramMap["channelId"] = channelID
 	paramMap["media"] = mediaURI
@@ -65,6 +65,6 @@ func ChannelPlay (channelID string, mediaURI string, options...string) {
 	fmt.Println(url)
 	fmt.Println(body)
 
-	result := ProcessCommand(url, body, "1234", "POST")
+	result := a.processCommand(url, body, "1234", "POST")
 	fmt.Println(string(result))
 }
