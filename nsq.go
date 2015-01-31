@@ -1,24 +1,24 @@
 package ari
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/bitly/go-nsq"
 	"github.com/bitly/nsq/util"
-	"net/http"
-	"encoding/json"
-	"fmt"
-	"bytes"
 	"log"
-	"errors"
+	"net/http"
 )
 
 var httpclient = &http.Client{}
 
 // nsqConfig struct contains the NSQ specific configuration information.
 type nsqConfig struct {
-	Address				string   	`json:"nsq_address"`
-	Channel				string		`json:"channel"`
-	MaxInFlight			int			`json:"max_in_flight"`
-	LookupdHttpAddress	[]string	`json:"lookupd_http_address"`
+	Address            string   `json:"nsq_address"`
+	Channel            string   `json:"channel"`
+	MaxInFlight        int      `json:"max_in_flight"`
+	LookupdHttpAddress []string `json:"lookupd_http_address"`
 }
 
 type NSQ struct {
@@ -26,7 +26,7 @@ type NSQ struct {
 }
 
 type topicInfo struct {
-	StatusCode	int	`json:"status_code"`
+	StatusCode int `json:"status_code"`
 }
 
 func (n *NSQ) InitBus(config interface{}) error {
@@ -36,7 +36,7 @@ func (n *NSQ) InitBus(config interface{}) error {
 		switch key {
 		case "lookupd_http_address":
 			lookupAddresses := value.([]interface{})
-			for _, v := range lookupAddresses{
+			for _, v := range lookupAddresses {
 				n.config.LookupdHttpAddress = append(n.config.LookupdHttpAddress, v.(string))
 			}
 		case "channel":
@@ -47,7 +47,7 @@ func (n *NSQ) InitBus(config interface{}) error {
 			n.config.Address = value.(string)
 		}
 	}
-	
+
 	// initial setup
 	if len(n.config.LookupdHttpAddress) == 0 {
 		return errors.New("Missing Lookupd HTTP Address configuration")
@@ -61,13 +61,13 @@ func (n *NSQ) InitBus(config interface{}) error {
 
 func (n *NSQ) StartProducer(topic string) (chan []byte, error) {
 	messages := make(chan []byte)
-	
-		nsqcfg := nsq.NewConfig()
-		nsqcfg.UserAgent = fmt.Sprintf("to_nsq/%s go-nsq/%s", util.BINARY_VERSION, nsq.VERSION)
-		producer, err := nsq.NewProducer(n.config.Address, nsqcfg)
-		if err != nil {
-			return nil, err
-		}
+
+	nsqcfg := nsq.NewConfig()
+	nsqcfg.UserAgent = fmt.Sprintf("to_nsq/%s go-nsq/%s", util.BINARY_VERSION, nsq.VERSION)
+	producer, err := nsq.NewProducer(n.config.Address, nsqcfg)
+	if err != nil {
+		return nil, err
+	}
 	go func(messages chan []byte, producer *nsq.Producer) {
 		for message := range messages {
 			producer.Publish(topic, message)
@@ -90,9 +90,9 @@ func (n *NSQ) StartConsumer(topic string) (chan []byte, error) {
 
 	in := make(chan []byte)
 	handlerFunc := func(m *nsq.Message) error {
-						in <- m.Body
-						return nil
-					}
+		in <- m.Body
+		return nil
+	}
 
 	// process events as they come off the bus
 	consumer.AddHandler(nsq.HandlerFunc(handlerFunc))
@@ -100,7 +100,7 @@ func (n *NSQ) StartConsumer(topic string) (chan []byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return in, nil
 }
 
