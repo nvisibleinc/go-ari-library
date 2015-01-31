@@ -36,9 +36,9 @@ func buildJSON(params map[string]string) string {
 
 func (a *AppInstance) ChannelPlay (channelID string, mediaURI string, options...string) {
 	paramMap := make(map[string]string)
-	paramMap["channelId"] = channelID
+//	paramMap["channelId"] = channelID
 	paramMap["media"] = mediaURI
-	url := fmt.Sprintf("\n/channels/%s/play", channelID)
+	url := fmt.Sprintf("/channels/%s/play", channelID)
 	for index, value := range options {
 		switch index {
 		case 0:
@@ -62,9 +62,6 @@ func (a *AppInstance) ChannelPlay (channelID string, mediaURI string, options...
 
 	body := buildJSON(paramMap)
 
-	fmt.Println(url)
-	fmt.Println(body)
-
 	result := a.processCommand(url, body, "1234", "POST")
-	fmt.Println(string(result))
+	fmt.Printf("ChannelPlay result code: %v\n", result)
 }

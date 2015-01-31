@@ -18,7 +18,7 @@ type NSQ_Config struct {
 
 // startNSQProducer starts a new NSQ producer by returning a channel that
 // messages should be put onto, thereby producing to the message bus.
-func startNSQProducer(config interface{}, channel string) chan []byte {
+func startNSQProducer(config interface{}, topic string) chan []byte {
 	var address string
 	n := config.(map[string]interface{})
 	for key, value := range n {
@@ -29,7 +29,7 @@ func startNSQProducer(config interface{}, channel string) chan []byte {
 	}
 
 	messages := make(chan []byte)
-	go func(address string, channel string) {
+	go func(address string, topic string) {
 		nsqcfg := nsq.NewConfig()
 		nsqcfg.UserAgent = fmt.Sprintf("to_nsq/%s go-nsq/%s", util.BINARY_VERSION, nsq.VERSION)
 		producer, err := nsq.NewProducer(address, nsqcfg)
@@ -37,16 +37,16 @@ func startNSQProducer(config interface{}, channel string) chan []byte {
 			log.Fatal(err)
 		}
 		for message := range messages {
-			producer.Publish(channel, message)
+			producer.Publish(topic, message)
 		}
-	}(address, channel)
+	}(address, topic)
 	return messages
 }
 
 // startNSQConsumer start a new NSQ consumer by returning a channel that
 // messages should be put onto, thereby consuming from the message bus.
-func startNSQConsumer(config interface{}, channel string) chan []byte {
-	var topic string
+func startNSQConsumer(config interface{}, topic string) chan []byte {
+	var channel string
 	var lookupdHttpAddress	[]string
 	//var	application			string
 	maxInFlight := 200
@@ -59,8 +59,8 @@ func startNSQConsumer(config interface{}, channel string) chan []byte {
 			for _, v := range lookupAddresses{
 				lookupdHttpAddress = append(lookupdHttpAddress, v.(string))
 			}
-		case "topic":
-			topic = value.(string)
+		case "channel":
+			channel = value.(string)
 		case "max_in_flight":
 			maxInFlight = value.(int)
 		}
