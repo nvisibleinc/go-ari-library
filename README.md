@@ -10,7 +10,7 @@ agnostic way.
 
 Installation
 ------------
-```go
+```
 $ go import https://github.com/nvisibleinc/go-ari-library
 ```
 
@@ -43,5 +43,5 @@ Licensing
 > along with this program; if not, write to the Free Software
 > Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-	[1]: https://github.com/nvisibleinc/go-ari-proxy
-	[2]: https://github.com/nvisibleinc/ari-voicemail
+   [1]: https://github.com/nvisibleinc/go-ari-proxy
+   [2]: https://github.com/nvisibleinc/ari-voicemail
