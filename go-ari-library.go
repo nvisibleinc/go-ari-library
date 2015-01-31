@@ -3,7 +3,6 @@ package nv
 
 import (
   "encoding/json"
-  "github.com/bitly/go-nsq"
 )
 
 type NV_Event struct {
