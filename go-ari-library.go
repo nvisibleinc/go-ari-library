@@ -141,7 +141,8 @@ func (a *AppInstance) addInFlightCommand(key string, commandChan chan *CommandRe
 	a.inFlightCommands[key] = commandChan
 }
 
-func (a *AppInstance) processCommand(url string, body string, uniqueId string, method string) *CommandResponse {
+func (a *AppInstance) processCommand(url string, body string, method string) *CommandResponse {
+	uniqueID := UUID()
 	commandResponse := make(chan *CommandResponse)
 	a.addInFlightCommand(uniqueId, commandResponse)
 	jsonMessage, err := json.Marshal(Command{UniqueID: uniqueId, URL: url, Method: method, Body: body})
