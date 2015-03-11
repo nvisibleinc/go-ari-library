@@ -40,7 +40,7 @@ func (r *RabbitMQ) StartProducer(topic string) (chan []byte, error) {
 	_, err = channel.QueueDeclare(
 		topic, // name of queue
 		true,  // durable
-		true,  // delete when unused
+		false, // delete when unused
 		false, // exclusive
 		true,  // nowait
 		nil)   // arguments
@@ -77,7 +77,7 @@ func (r *RabbitMQ) StartConsumer(topic string) (chan []byte, error) {
 	queue, err := channel.QueueDeclare(
 		topic, // name of queue
 		true,  // durable
-		true,  // delete when unused
+		false, // delete when unused
 		false, // exclusive
 		true,  // nowait
 		nil)   // arguments
