@@ -94,9 +94,6 @@ func UUID() string {
 // methods.
 func InitBus(busType string, config interface{}) error {
 	switch busType {
-	case "NSQ":
-		// Start NSQ
-		bus = new(NSQ)
 	case "NATS":
 		// Start NATS
 		bus = new(NATS)
